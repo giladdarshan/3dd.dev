@@ -1,0 +1,82 @@
+body { margin: 0; }
+div {
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+#body {
+    background-color: rgb(104, 100, 100);
+    color: #fff;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+}
+#controlBar {
+    background-color: khaki;
+    height: 30px;
+    flex-shrink: 0;
+    display: inline-flex;
+}
+#header {
+    color: #000;
+    font-weight: bold;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-size: 16pt;
+    width: 500px;
+    line-height: 23pt;
+}
+#mainBody {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: row;
+    height: inherit;
+}
+
+#leftDiv {
+    color: gray;
+    width: 400px;
+    display: inline-flex;
+    flex-direction: column;
+}
+#code {
+    color: blue;
+    width: inherit;
+    height: 90%;
+    resize: none;
+    flex-grow: 1;
+}
+#runCodeBtn {
+    width: inherit;
+    height: 10%;
+    flex-shrink: 0;
+}
+#mainDiv {
+    color: red;
+    width: 700px;
+    height: 100%;
+    right: 0;
+
+}
+#mainDivBorder {
+    content: '';
+    background-color: #ccc;
+    /* position: absolute;
+    left: 40px; */
+    width: 4px;
+    height: 100%;
+    /* cursor: ew-resize; */
+}
+#axisDiv {
+    position: absolute;
+    display: none;
+    width: 100px;
+    height: 100px;
+}
