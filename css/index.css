@@ -5,8 +5,8 @@ div {
     display: block;
 }
 #body {
-    background-color: rgb(104, 100, 100);
-    color: #fff;
+    background-color: #B0B0B0;
+    color: #000;
     width: 100%;
     height: 100%;
     margin: 0;
@@ -17,22 +17,44 @@ div {
     display: flex;
     flex-direction: column;
 }
-#controlBar {
+#body a {
+    color: #000;
+    text-decoration: none;
+}
+#headerDiv {
     background-color: khaki;
     height: 30px;
     flex-shrink: 0;
     display: inline-flex;
+    border-bottom: 3px solid #ccc;
 }
-#header {
+#titleDiv {
     color: #000;
     font-weight: bold;
     vertical-align: middle;
     margin-left: 10px;
     font-size: 16pt;
-    width: 500px;
+    /* width: 500px; */
+    width: 30%;
     line-height: 23pt;
+    align-self: center;
 }
-#mainBody {
+#controlButtons {
+    display: inline-flex;
+    width: 40%;
+    justify-content: space-evenly;
+}
+#controlButtons button {
+    margin-right: 5px;
+}
+#linksDiv {
+    display: inline-flex;
+    /* justify-content: center; */
+    align-items: center;
+    width: 30%;
+    font-size: 13pt;
+}
+#bodyDiv {
     margin: 0;
     padding: 0;
     display: inline-flex;
@@ -79,4 +101,16 @@ div {
     display: none;
     width: 100px;
     height: 100px;
+}
+#footerDiv {
+    background-color: #B0B0B0;
+    border-top: 3px solid #ccc;
+    height: 25px;
+    font-size: 11pt;
+    display: flex;
+    flex-direction: row-reverse;
+}
+#contactDetails {
+    margin-right: 5px;
+    font-weight: bold;
 }
