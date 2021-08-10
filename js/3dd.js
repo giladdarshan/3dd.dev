@@ -190,19 +190,16 @@ function moveRight(num) {
 }
 export class GD3DD {
   constructor(THREEInc, OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc) {
-    this.windowSize = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
+    this.windowSize = {};
     this.BORDER_SIZE = 4;
+    
     this.mainDiv = document.getElementById("mainDiv");
     this.leftDiv = document.getElementById("leftDiv");
     this.mainDivBorder = document.getElementById("mainDivBorder");
-    this.controlBar = document.getElementById("controlBar");
+    this.headerDiv = document.getElementById("headerDiv");
+    this.footerDiv = document.getElementById("footerDiv");
     this.codeBox = document.getElementById("code");
-    this.leftDivWidth = 500;
-    this.mainDivWidth = this.windowSize.width - this.leftDivWidth - this.BORDER_SIZE;
-    this.mainDivHeight = this.windowSize.height - parseInt(getComputedStyle(this.controlBar, '').height);
+    this.setDivSizes();
     this.m_pos = -1;
 
     OrbitControls = OrbitControlsInc;
@@ -222,12 +219,17 @@ export class GD3DD {
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
   }
   setDivSizes() {
+    this.windowSize.width = window.innerWidth;
+    this.windowSize.height = window.innerHeight;
+    this.leftDivWidth = Math.ceil(this.windowSize.width * 0.26);
+    this.mainDivWidth = this.windowSize.width - this.leftDivWidth - this.BORDER_SIZE;
+    this.mainDivHeight = this.windowSize.height - parseInt(getComputedStyle(this.headerDiv, '').height) - parseInt(getComputedStyle(this.footerDiv, '').height);
     this.leftDiv.style.width = `${this.leftDivWidth}px`;
     this.codeBox.style.width = `${this.leftDivWidth}px`;
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
   }
   documentReady() {
-    this.setDivSizes();
+    
     this.startThreeJS();
     document.getElementById("runCodeBtn").addEventListener("click", this.runSandbox.bind(this), false);
     document.getElementById("exportSTLBinary").addEventListener("click", this.exportBinary.bind(this), false);
@@ -235,14 +237,26 @@ export class GD3DD {
     document.getElementById("exportOBJ").addEventListener("click", this.exportOBJ.bind(this), false);
   }
   windowResizeCallback() {
-    this.windowSize.width = window.innerWidth;
-    this.windowSize.height = window.innerHeight;
-    this.mainDivWidth = this.windowSize.width - this.leftDivWidth - this.BORDER_SIZE;
-    this.mainDivHeight = this.windowSize.height - parseInt(getComputedStyle(this.controlBar, '').height);
-    this.mainDiv.style.width = `${this.mainDivWidth}px`;
-    this.camera.aspect = this.mainDivWidth / this.mainDivHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize( this.mainDivWidth, this.mainDivHeight );
+    try {
+      let newWindowWidth = window.innerWidth;
+      let newWindowHeight = window.innerHeight;
+      if ((newWindowWidth == this.windowSize.width) && (newWindowHeight == this.windowSize.height)) {
+        return;
+      }
+      this.setDivSizes();
+      this.camera.position.set(0,200, 200);
+      this.camera.lookAt(0,0,0);
+      this.cameraAspect = this.mainDivWidth / this.mainDivHeight;
+      this.camera.aspect = this.cameraAspect;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize( this.mainDivWidth, this.mainDivHeight );
+      this.controls.target.set(0, 0, 0);
+      this.controls.update();
+      this.animate();
+    }
+    catch(e) {
+      alert(e.toString());
+    }
   }
   runSandbox() {
     let code = document.getElementById("code").value;
@@ -254,9 +268,11 @@ export class GD3DD {
     }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, Shapes, { log: console.log, error: console.error }, this.CSG, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
     this.animate();
   }
-  start() {}
+  start() {
+  }
   addSceneHelpers() {
     this.scene.background = new THREE.Color( 0xb0b0b0 );
+    
   }
   addAxisScene() {
 
@@ -272,8 +288,13 @@ export class GD3DD {
     this.axisDiv.style.display = "block";
     this.axisDiv.style.top = `${bottom - 120}px`;
     this.axisDiv.style.left = `${left + 20}px`;
+
+    console.log(this.mainDivHeight);
+    console.log(this.mainDivWidth);
+  
   }
   startThreeJS() {
+  
     this.exporterSTL = new this.STLExporter();
     this.exporterOBJ = new this.OBJExporter();
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -294,20 +315,17 @@ export class GD3DD {
     this.controls.update();
     this.renderRequested = false;
     this.controls.addEventListener('change', this.requestRender.bind(this));
+
     this.addSceneHelpers();
+
+    
+
     this.animate();
   }
   renderScene(sceneName) {
     if (sceneName == "main") {
       this.controls.update();
       this.renderer.render( this.scene, this.camera );
-    }
-    else if (sceneName == "axisHelper") {
-      this.renderer.clearDepth();
-      let {left, right, top, bottom, width, height} = this.axisDiv.getBoundingClientRect();
-      let positiveYUpBottom = this.renderer.domElement.clientHeight - bottom;
-      this.renderer.setViewport(10, 500, 100, 100);
-      this.renderer.render(this.axisScene, this.axisCamera);
     }
   }
   requestRender() {
@@ -353,5 +371,9 @@ export class GD3DD {
     document.body.appendChild(saveLink);
     saveLink.click();
     document.body.removeChild(saveLink);
+  }
+  deviceOrientation() {
+    alert('aaaa');
+    document.getElementById("code").value = "AAAAA";
   }
 };
