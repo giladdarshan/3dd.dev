@@ -19,6 +19,7 @@ var Shapes = {
     wireframe = wireframe == undefined ? this.addWireframe : wireframe;
     obj.moveUp = moveUp;
     obj.moveRight = moveRight;
+    obj.moveBack = moveBack;
     if (wireframe) {
       this.createWireframe(obj);
     }
@@ -37,6 +38,7 @@ var Shapes = {
     this.createWireframe(cylinder);
     cylinder.moveUp = moveUp;
     cylinder.moveRight = moveRight;
+    cylinder.moveBack = moveBack;
     return cylinder;
   },
   Crystal: function(diameter, height, sides) {
@@ -77,6 +79,7 @@ var Shapes = {
     let group = new THREE.Group();
     group.moveUp = moveUp;
     group.moveRight = moveRight;
+    group.moveBack = moveBack;
     return group;
   },
   union: function(obj1, obj2) {
@@ -187,6 +190,9 @@ function moveUp(num) {
 }
 function moveRight(num) {
   this.position.x += num;
+}
+function moveBack(num) {
+  this.position.z -= num;
 }
 export class GD3DD {
   constructor(THREEInc, OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc) {
