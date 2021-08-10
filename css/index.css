@@ -33,10 +33,10 @@ div {
     font-weight: bold;
     vertical-align: middle;
     margin-left: 10px;
-    font-size: 16pt;
+    font-size: 14pt;
     /* width: 500px; */
     width: 30%;
-    line-height: 23pt;
+    /* line-height: 23pt; */
     align-self: center;
 }
 #controlButtons {
