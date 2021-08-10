@@ -2,7 +2,8 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>3DD.Dev</title>
+		<title>3DD.Dev - 3D Design Development (CAD)</title>
+		<meta name="description" content="3D Design development (CAD) in Javascript code">
 		<link rel="stylesheet" href="css/index.css">
 		<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
         <script src="js/jquery-3.6.0.min.js"></script>
@@ -23,6 +24,7 @@
 				gd3dd.windowResizeCallback();
 			});
 		</script>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script>
 		<script>
 			window.dataLayer = window.dataLayer || [];
@@ -34,23 +36,31 @@
 	</head>
 	<body>
 		<div id="body">
-			<div id="controlBar">
-				<div id="header">
+			<div id="headerDiv">
+				<div id="titleDiv">
 					3DD.Dev - Under Development
 				</div>
-				<button id="exportSTLBinary">Export Binary STL</button>
-				<button id="exportOBJ">Export OBJ</button>
-				<button id="exportSTLASCII">Export ASCII STL</button>
+				<div id="controlButtons">
+					<button id="exportSTLBinary">Export Binary STL</button>
+					<button id="exportOBJ">Export OBJ</button>
+					<button id="exportSTLASCII">Export ASCII STL</button>
+				</div>
+				<div id="linksDiv">
+					<a href="https://github.com/giladdarshan/3dd.dev/blob/main/README.md" target="_blank">Read Me</a>
+				</div>
 			</div>
-			<div id="mainBody">
+			<div id="bodyDiv">
 				<div id="leftDiv">
-					<textarea id="code"></textarea>
+					<textarea id="code" autocapitalize="none" spellcheck="false"></textarea>
 					<button id="runCodeBtn">Run Code</button>
 				</div>
 				<div id="mainDivBorder"> </div>
 				<div id="mainDiv"></div>
 			</div>
+			<div id="footerDiv">
+				<div id="contactDetails">Developed by <a href="mailto:gilad@activedesign.co.il">Gilad Darshan</a></div>
+			</div>
 		</div>
-		<div id="axisDiv">A</div>
+		<!-- <div id="axisDiv"></div> -->
 	</body>
 </html>
