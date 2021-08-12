@@ -328,7 +328,7 @@ export class GD3DD {
   runSandbox() {
     let code = document.getElementById("code").value;
     this.scene = new THREE.Scene();
-    this.addSceneHelpers();
+    this.addSceneHelpers(false);
     
     (function(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) { 
       eval(code);
@@ -338,11 +338,13 @@ export class GD3DD {
   start() {
     
   }
-  addSceneHelpers() {
+  addSceneHelpers(firstRun) {
     this.scene.background = new THREE.Color( 0xb0b0b0 );
-    const gridHelperSize = 600;
-    const gridHelperDivisions = 600;
-    this.gridHelper = new THREE.GridHelper(gridHelperSize, gridHelperDivisions, "black", "gray");
+    if (firstRun) {
+      const gridHelperSize = 600;
+      const gridHelperDivisions = 600;
+      this.gridHelper = new THREE.GridHelper(gridHelperSize, gridHelperDivisions, "black", "gray");
+    }
     this.scene.add(this.gridHelper);
     this.axesHelper = new THREE.AxesHelper(0.3);
     this.localToCameraAxesPlacement = new THREE.Vector3(-1.3 * this.camera.aspect, -1.1, -2);
@@ -372,7 +374,7 @@ export class GD3DD {
     this.renderRequested = false;
     this.controls.addEventListener('change', this.requestRender.bind(this));
 
-    this.addSceneHelpers();
+    this.addSceneHelpers(true);
 
   
     this.animate();
