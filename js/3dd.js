@@ -87,6 +87,11 @@ var Shapes = {
       polygonOffsetUnits: 1
     });
   },
+  DoubleSidedBasicMeshMaterial: function(color) {
+    let material = this.BasicMeshMaterial(color);
+    material.side = THREE.DoubleSide;
+    return material;
+  },
   Group: function() {
     let group = new THREE.Group();
     group.moveUp = moveUp;
