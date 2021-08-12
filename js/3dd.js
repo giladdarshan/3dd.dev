@@ -1,9 +1,21 @@
-const REVISION = 0.1;
+const REVISION = "0.0.1";
 var OrbitControls = {};
 var THREE = {};
 var BufferGeometryUtils = {};
 var ThreeBSP = {};
 var CSG = {};
+var outputTextObj = {};
+function outputText() {
+  for (let i = 0; i < arguments.length; i++) {
+    if (i == 0) {
+      outputTextObj.value = `${outputTextObj.value}${arguments[i]}`;
+    }
+    else {
+      outputTextObj.value = `${outputTextObj.value} ${arguments[i]}`;
+    }
+  }
+  outputTextObj.value = `${outputTextObj.value}\n`;
+}
 var Shapes = {
   addWireframe: true,
   createWireframe: function(obj) {
@@ -184,6 +196,7 @@ var Shapes = {
     }
     return THREE.Math.degToRad(deg);
   }
+
 };
 function moveUp(num) {
   this.position.y += num;
@@ -198,13 +211,15 @@ export class GD3DD {
   constructor(THREEInc, OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc) {
     this.windowSize = {};
     this.BORDER_SIZE = 4;
-    
+    this.showGridHelper = true;
     this.mainDiv = document.getElementById("mainDiv");
+    this.rightDiv = document.getElementById("rightDiv");
     this.leftDiv = document.getElementById("leftDiv");
     this.mainDivBorder = document.getElementById("mainDivBorder");
     this.headerDiv = document.getElementById("headerDiv");
     this.footerDiv = document.getElementById("footerDiv");
     this.codeBox = document.getElementById("code");
+    outputTextObj = document.getElementById("outputText");
     this.setDivSizes();
     this.m_pos = -1;
 
@@ -214,6 +229,7 @@ export class GD3DD {
     this.STLExporter = STLExporter;
     this.OBJExporter = OBJExporter;
     CSG = CSGInc;
+    
   }
   resizeDiv(e) {
     let dx = this.m_pos - e.x;
@@ -223,6 +239,8 @@ export class GD3DD {
     this.leftDiv.style.width = `${this.leftDivWidth}px`;
     this.codeBox.style.width = `${this.leftDivWidth}px`;
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
+    this.rightDiv.style.width = `${this.mainDivWidth}px`;
+    
   }
   setDivSizes() {
     this.windowSize.width = window.innerWidth;
@@ -230,9 +248,12 @@ export class GD3DD {
     this.leftDivWidth = Math.ceil(this.windowSize.width * 0.26);
     this.mainDivWidth = this.windowSize.width - this.leftDivWidth - this.BORDER_SIZE;
     this.mainDivHeight = this.windowSize.height - parseInt(getComputedStyle(this.headerDiv, '').height) - parseInt(getComputedStyle(this.footerDiv, '').height);
+    this.mainDivHeight = this.mainDivHeight * 0.845;
     this.leftDiv.style.width = `${this.leftDivWidth}px`;
-    this.codeBox.style.width = `${this.leftDivWidth}px`;
+    this.codeBox.style.width = `${this.leftDivWidth - 6}px`;
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
+    this.rightDiv.style.width = `${this.mainDivWidth}px`;
+
   }
   documentReady() {
     
@@ -241,6 +262,45 @@ export class GD3DD {
     document.getElementById("exportSTLBinary").addEventListener("click", this.exportBinary.bind(this), false);
     document.getElementById("exportSTLASCII").addEventListener("click", this.exportAscii.bind(this), false);
     document.getElementById("exportOBJ").addEventListener("click", this.exportOBJ.bind(this), false);
+    document.getElementById("showGridCheckbox").addEventListener("click", this.toggleGridHelperVisibility.bind(this), false);
+    var gd3ddCookie = Cookies.get('3dd.dev');
+    var displayPopup = false;
+    var popupText = 'First time visitor?<br />Head over to the Read Me page';
+    if (gd3ddCookie) {
+      if (gd3ddCookie != REVISION) {
+        displayPopup = true;
+        popupText = '3DD.Dev was updated!<br/>Head over to the Read Me page';
+      }
+    }
+    else {
+      displayPopup = true;
+    }
+    if (displayPopup) {
+      var readMeLinkProps = document.getElementById('readMeLink').getBoundingClientRect();
+      this.readMeLinkPopup = document.getElementById('readMeLinkPopup');
+      this.readMeLinkPopup.innerHTML = popupText;
+      this.readMeLinkPopup.style.display = "block";
+      var readMeLinkPopupProps = this.readMeLinkPopup.getBoundingClientRect();
+      this.readMeLinkPopup.style.left = `${readMeLinkProps.x + (readMeLinkProps.width / 2) - (readMeLinkPopupProps.width /2)}px`;
+      this.readMeLinkPopup.style.top = `${readMeLinkProps.bottom + 10}px`;
+      this.readMeLinkPopup.addEventListener('click', this.hideReadMeLinkPopup.bind(this), false);
+      setTimeout(this.hideReadMeLinkPopup.bind(this),10000);
+      Cookies.set('3dd.dev', REVISION);
+    }
+    
+  }
+  hideReadMeLinkPopup() {
+    this.readMeLinkPopup.style.display = "none";
+  }
+  toggleGridHelperVisibility() {
+    if (this.showGridHelper) {
+      this.gridHelper.visible = false;
+    }
+    else {
+      this.gridHelper.visible = true;
+    }
+    this.animate();
+    this.showGridHelper = !this.showGridHelper;
   }
   windowResizeCallback() {
     try {
@@ -255,6 +315,7 @@ export class GD3DD {
       this.cameraAspect = this.mainDivWidth / this.mainDivHeight;
       this.camera.aspect = this.cameraAspect;
       this.camera.updateProjectionMatrix();
+      this.localToCameraAxesPlacement = new THREE.Vector3(-1.3 * this.camera.aspect, -1.1, -2);
       this.renderer.setSize( this.mainDivWidth, this.mainDivHeight );
       this.controls.target.set(0, 0, 0);
       this.controls.update();
@@ -269,38 +330,26 @@ export class GD3DD {
     this.scene = new THREE.Scene();
     this.addSceneHelpers();
     
-    (function(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL) { 
+    (function(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) { 
       eval(code);
-    }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, Shapes, { log: console.log, error: console.error }, this.CSG, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+    }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, Shapes, { log: console.log, error: console.error }, this.CSG, outputText, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
     this.animate();
   }
   start() {
+    
   }
   addSceneHelpers() {
     this.scene.background = new THREE.Color( 0xb0b0b0 );
-    
-  }
-  addAxisScene() {
+    const gridHelperSize = 600;
+    const gridHelperDivisions = 600;
+    this.gridHelper = new THREE.GridHelper(gridHelperSize, gridHelperDivisions, "black", "gray");
+    this.scene.add(this.gridHelper);
+    this.axesHelper = new THREE.AxesHelper(0.3);
+    this.localToCameraAxesPlacement = new THREE.Vector3(-1.3 * this.camera.aspect, -1.1, -2);
 
-    this.axisCamera = new THREE.PerspectiveCamera(this.cameraFOV, this.cameraAspect, this.cameraNear, this.cameraFar);
-    this.axisCamera.position.set(0, 100, 100);
-    this.axisCamera.lookAt(0, 0, 0);
-
-    this.axisScene = new THREE.Scene();
-    this.axisScene.background = new THREE.Color( 0xff0000 );
-    let {left, right, top, bottom, width, height} = this.mainDiv.getBoundingClientRect();
-    
-    this.axisDiv = document.getElementById("axisDiv");
-    this.axisDiv.style.display = "block";
-    this.axisDiv.style.top = `${bottom - 120}px`;
-    this.axisDiv.style.left = `${left + 20}px`;
-
-    console.log(this.mainDivHeight);
-    console.log(this.mainDivWidth);
-  
+    this.scene.add(this.axesHelper);
   }
   startThreeJS() {
-  
     this.exporterSTL = new this.STLExporter();
     this.exporterOBJ = new this.OBJExporter();
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -309,12 +358,13 @@ export class GD3DD {
     this.mainDiv.appendChild(this.renderer.domElement );
     this.cameraFOV = 75;
     this.cameraAspect = this.mainDivWidth / this.mainDivHeight;
-    this.cameraNear = 1;
-    this.cameraFar = 1000;
+    this.cameraNear = 0.1;
+    this.cameraFar = 10000;
     this.camera = new THREE.PerspectiveCamera(this.cameraFOV, this.cameraAspect, this.cameraNear, this.cameraFar);
     this.scene = new THREE.Scene();
     
     this.controls = new OrbitControls(this.camera, this.renderer.domElement );
+
     this.camera.position.set(0,200, 200);
     this.camera.lookAt(0,0,0);
     this.controls.target.set(0, 0, 0);
@@ -324,14 +374,25 @@ export class GD3DD {
 
     this.addSceneHelpers();
 
-    
-
+  
     this.animate();
   }
   renderScene(sceneName) {
     if (sceneName == "main") {
       this.controls.update();
+      let {left, right, top, bottom, width, height} = this.mainDiv.getBoundingClientRect();
+
+      this.camera.updateMatrixWorld();
+      let axesPlacement = this.camera.localToWorld(this.localToCameraAxesPlacement.clone());
+      this.axesHelper.position.copy(axesPlacement);
       this.renderer.render( this.scene, this.camera );
+    }
+    else if (sceneName == "axisHelper") {
+      this.renderer.clearDepth();
+      let {left, right, top, bottom, width, height} = this.axisDiv.getBoundingClientRect();
+      let positiveYUpBottom = this.renderer.domElement.clientHeight - bottom;
+      this.renderer.setViewport(10, 500, 100, 100);
+      this.renderer.render(this.axisScene, this.axisCamera);
     }
   }
   requestRender() {
@@ -346,6 +407,7 @@ export class GD3DD {
     if (this.axisScene) {
       this.renderScene("axisHelper");
     }
+    
   }
   exportBinary() {
     let result = this.exporterSTL.parse(this.scene, { binary: true });
@@ -377,9 +439,5 @@ export class GD3DD {
     document.body.appendChild(saveLink);
     saveLink.click();
     document.body.removeChild(saveLink);
-  }
-  deviceOrientation() {
-    alert('aaaa');
-    document.getElementById("code").value = "AAAAA";
   }
 };
