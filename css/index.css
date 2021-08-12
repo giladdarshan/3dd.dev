@@ -68,6 +68,14 @@ div {
     display: inline-flex;
     flex-direction: column;
 }
+#leftDivControls {
+    display: inline-flex;
+    flex-direction: row;
+    padding: 2px;
+}
+#showGridCheckbox { 
+    margin-left: 8px;
+}
 #code {
     color: blue;
     width: inherit;
@@ -80,12 +88,34 @@ div {
     height: 10%;
     flex-shrink: 0;
 }
-#mainDiv {
-    color: red;
+#rightDiv {
     width: 700px;
     height: 100%;
     right: 0;
+    display: inline-flex;
+    flex-direction: column;
+}
+#mainDiv {
+    color: red;
+    width: 100%;
+    height: 85%;
+    right: 0;
 
+}
+#outputDiv {
+    border-top: 3px solid #ccc;
+    height: 14%;
+    display: inline-flex;
+    flex-direction: row;
+}
+#outputText {
+    width: 100%;
+    height: 100%;
+    margin-left: 10px;
+    resize: none;
+}
+#outputTextLabel {
+    margin-left: 5px;
 }
 #mainDivBorder {
     content: '';
@@ -113,4 +143,31 @@ div {
 #contactDetails {
     margin-right: 5px;
     font-weight: bold;
+    align-self: center;
+}
+#readMeLinkPopup { 
+    position: absolute;
+    display: none;
+    text-align: center;
+    background-color: #6495ed;
+    color: #fff;
+    padding: 6px;
+    border-radius: 1rem;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, .3), 0 0.0625rem 0.125rem rgba(0, 0, 0, .2);
+    font-size: 14px;
+
+}
+
+#readMeLinkPopup::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    bottom: 100%;
+    left: 43%;
+    border: .75rem solid transparent;
+    border-top: none;
+
+    border-bottom-color: #6495ed;
+    filter: drop-shadow(0 -0.0625rem 0.0625rem rgba(0, 0, 0, .1));
 }
