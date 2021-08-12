@@ -1,10 +1,14 @@
-# 3DD.Dev - Under Development
+# [3DD.Dev](https://3dd.dev) - Under Development
 3D Design Development (CAD) in JavaScript code.\
 3DD.Dev is using the [Three.js](https://threejs.org/) library to create and display the 3D design from the code written in the text box.\
 <img width="350" src="https://github.com/giladdarshan/3dd.dev/blob/main/gh-images/3dd.dev-screenshot.png?raw=true">
 
 ### How to use
-TBD - Write the design code in the text box, add the object to the scene with the command `scene.add(object)` and then click on the Run Code button.
+1. Go to [https://3DD.Dev](https://3dd.dev)
+2. Write the design code in the text box, you can use an example from one of the shapes below
+   1. Create the object
+   2. Add the object to the scene with the command `scene.add(object)`
+   3. Click on the Run Code button.
 
 ### Available Shapes
 3DD.Dev supports all the geometries and meshes (shapes) that are available with Three.js, to view a list of all the geometries and meshes visit [Three.js's documentation](https://threejs.org/docs)
