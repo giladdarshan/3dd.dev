@@ -15,6 +15,7 @@
 			import { BufferGeometryUtils } from '/js/BufferGeometryUtils.js';
 			import CSG from '/js/THREE-CSGMesh.js';
 			import { GD3DD } from '/js/3dd.js';
+			import * as Cookies from '/js/js.cookie.min.js';
 			var gd3dd = new GD3DD(THREE, OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG);
 			gd3dd.start();
 			$('document').ready(() => {
@@ -46,21 +47,31 @@
 					<button id="exportSTLASCII">Export ASCII STL</button>
 				</div>
 				<div id="linksDiv">
-					<a href="https://github.com/giladdarshan/3dd.dev/blob/main/README.md" target="_blank">Read Me</a>
+					<a href="https://github.com/giladdarshan/3dd.dev/blob/main/README.md" target="_blank" id="readMeLink">Read Me</a>
 				</div>
 			</div>
 			<div id="bodyDiv">
 				<div id="leftDiv">
+					<div id="leftDivControls">
+						<input type="checkbox" id="showGridCheckbox" name="showGridCheckbox" checked="checked">
+						<label for="showGridCheckbox">Show Grid</label>
+					</div>
 					<textarea id="code" autocapitalize="none" spellcheck="false"></textarea>
 					<button id="runCodeBtn">Run Code</button>
 				</div>
 				<div id="mainDivBorder"> </div>
-				<div id="mainDiv"></div>
+				<div id="rightDiv">
+					<div id="mainDiv"></div>
+					<div id="outputDiv"><label for="outputText" id="outputTextLabel">Output:</label><textarea id="outputText" name="outputText" readonly></textarea></div>
+				</div>
 			</div>
 			<div id="footerDiv">
 				<div id="contactDetails">Developed by <a href="mailto:gilad@activedesign.co.il">Gilad Darshan</a></div>
 			</div>
 		</div>
-		<!-- <div id="axisDiv"></div> -->
+		<div id="readMeLinkPopup">
+			First time visitor?<br />
+			Head over to the Read Me page!
+		</div>
 	</body>
 </html>
