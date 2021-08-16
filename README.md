@@ -44,3 +44,21 @@ scene.add(cylinder);
 let crystal = Shapes.Crystal(25, 40, 6);
 scene.add(crystal);
 ```
+<br />
+<br />
+### Adding animation
+To add an animation to the scene, you can create an animation function and then pass it to the `Utils.addAnimation()` function.\
+For example:
+```
+let cube = Shapes.Cube({
+    width: 50,
+    height: 20,
+    depth: 70
+});
+scene.add(cube);
+function animateCube() {
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+}
+Utils.addAnimation(animateCube);
+```
