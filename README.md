@@ -45,7 +45,7 @@ let crystal = Shapes.Crystal(25, 40, 6);
 scene.add(crystal);
 ```
 <br />
-<br />
+
 ### Adding animation
 To add an animation to the scene, you can create an animation function and then pass it to the `Utils.addAnimation()` function.\
 For example:
