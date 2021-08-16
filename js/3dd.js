@@ -1,9 +1,10 @@
-const REVISION = "0.0.1";
+const REVISION = "0.0.2";
 var OrbitControls = {};
 var THREE = {};
 var BufferGeometryUtils = {};
 var ThreeBSP = {};
 var CSG = {};
+// var Cookies = {};
 var outputTextObj = {};
 function outputText() {
   for (let i = 0; i < arguments.length; i++) {
@@ -16,7 +17,7 @@ function outputText() {
   }
   outputTextObj.value = `${outputTextObj.value}\n`;
 }
-var Shapes = {
+const Shapes = {
   addWireframe: true,
   createWireframe: function(obj) {
     if (!this.addWireframe) {
@@ -201,7 +202,6 @@ var Shapes = {
     }
     return THREE.Math.degToRad(deg);
   }
-
 };
 function moveUp(num) {
   this.position.y += num;
@@ -213,7 +213,7 @@ function moveBack(num) {
   this.position.z -= num;
 }
 export class GD3DD {
-  constructor(THREEInc, OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc) {
+  constructor(THREEInc, OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc, Utils) {
     this.windowSize = {};
     this.BORDER_SIZE = 4;
     this.showGridHelper = true;
@@ -234,7 +234,8 @@ export class GD3DD {
     this.STLExporter = STLExporter;
     this.OBJExporter = OBJExporter;
     CSG = CSGInc;
-    
+    this.animationArr = [];
+    this.Utils = new Utils(Shapes, this.animationArr);
   }
   resizeDiv(e) {
     let dx = this.m_pos - e.x;
@@ -245,7 +246,6 @@ export class GD3DD {
     this.codeBox.style.width = `${this.leftDivWidth}px`;
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
     this.rightDiv.style.width = `${this.mainDivWidth}px`;
-    
   }
   setDivSizes() {
     this.windowSize.width = window.innerWidth;
@@ -258,7 +258,6 @@ export class GD3DD {
     this.codeBox.style.width = `${this.leftDivWidth - 6}px`;
     this.mainDiv.style.width = `${this.mainDivWidth}px`;
     this.rightDiv.style.width = `${this.mainDivWidth}px`;
-
   }
   documentReady() {
     
@@ -292,7 +291,6 @@ export class GD3DD {
       setTimeout(this.hideReadMeLinkPopup.bind(this),10000);
       Cookies.set('3dd.dev', REVISION);
     }
-    
   }
   hideReadMeLinkPopup() {
     this.readMeLinkPopup.style.display = "none";
@@ -304,7 +302,7 @@ export class GD3DD {
     else {
       this.gridHelper.visible = true;
     }
-    this.animate();
+    this.renderScene();
     this.showGridHelper = !this.showGridHelper;
   }
   windowResizeCallback() {
@@ -324,7 +322,7 @@ export class GD3DD {
       this.renderer.setSize( this.mainDivWidth, this.mainDivHeight );
       this.controls.target.set(0, 0, 0);
       this.controls.update();
-      this.animate();
+      this.renderScene();
     }
     catch(e) {
       alert(e.toString());
@@ -332,16 +330,21 @@ export class GD3DD {
   }
   runSandbox() {
     let code = document.getElementById("code").value;
+    if (this.animationArr.length > 0) {
+      this.animationArr.splice(0, this.animationArr.length);
+    }
     this.scene = new THREE.Scene();
     this.addSceneHelpers(false);
     
-    (function(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) { 
+    (function(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, Utils, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) { 
       eval(code);
-    }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, Shapes, { log: console.log, error: console.error }, this.CSG, outputText, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
-    this.animate();
+    }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, Shapes, { log: console.log, error: console.error }, this.CSG, outputText, this.Utils, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+    this.renderScene();
+    if (this.animationArr.length > 0) {
+      this.animate();
+    }
   }
   start() {
-    
   }
   addSceneHelpers(firstRun) {
     this.scene.background = new THREE.Color( 0xb0b0b0 );
@@ -381,40 +384,36 @@ export class GD3DD {
 
     this.addSceneHelpers(true);
 
-  
-    this.animate();
+    this.renderScene();
   }
-  renderScene(sceneName) {
-    if (sceneName == "main") {
-      this.controls.update();
-      let {left, right, top, bottom, width, height} = this.mainDiv.getBoundingClientRect();
-
-      this.camera.updateMatrixWorld();
-      let axesPlacement = this.camera.localToWorld(this.localToCameraAxesPlacement.clone());
-      this.axesHelper.position.copy(axesPlacement);
-      this.renderer.render( this.scene, this.camera );
-    }
-    else if (sceneName == "axisHelper") {
-      this.renderer.clearDepth();
-      let {left, right, top, bottom, width, height} = this.axisDiv.getBoundingClientRect();
-      let positiveYUpBottom = this.renderer.domElement.clientHeight - bottom;
-      this.renderer.setViewport(10, 500, 100, 100);
-      this.renderer.render(this.axisScene, this.axisCamera);
-    }
+  renderScene() {
+    this.renderRequested = false;
+    this.controls.update();
+    this.camera.updateMatrixWorld();
+    let axesPlacement = this.camera.localToWorld(this.localToCameraAxesPlacement.clone());
+    this.axesHelper.position.copy(axesPlacement);
+    this.renderer.render( this.scene, this.camera );
   }
   requestRender() {
     if (!this.renderRequested) {
       this.renderRequested = true;
-      requestAnimationFrame(this.animate.bind(this));
+      requestAnimationFrame(this.renderScene.bind(this));
     }
   }
   animate() {
-    this.renderRequested = false;
-    this.renderScene("main");
-    if (this.axisScene) {
-      this.renderScene("axisHelper");
+    if (this.animationArr.length > 0) {
+      this.animationArr.forEach(callbackFunc => {
+        try {
+          callbackFunc();
+        }
+        catch(e) {
+          console.log("run animation e", e);
+          this.animationArr.splice(0, this.animationArr.length);
+        }
+      });
+      this.renderer.render(this.scene, this.camera);  
+      requestAnimationFrame(this.animate.bind(this));
     }
-    
   }
   exportBinary() {
     let result = this.exporterSTL.parse(this.scene, { binary: true });

@@ -14,9 +14,10 @@
 			import { OBJExporter } from '/js/OBJExporter.js';
 			import { BufferGeometryUtils } from '/js/BufferGeometryUtils.js';
 			import CSG from '/js/THREE-CSGMesh.js';
-			import { GD3DD } from '/js/3dd.js';
 			import * as Cookies from '/js/js.cookie.min.js';
-			var gd3dd = new GD3DD(THREE, OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG);
+			import { GD3DD } from '/js/3dd.js';
+			import { Utils } from '/js/3ddUtils.js';
+			var gd3dd = new GD3DD(THREE, OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG, Utils);
 			gd3dd.start();
 			$('document').ready(() => {
 				gd3dd.documentReady();
