@@ -34,7 +34,7 @@ let properties = {
     height: 70,
     radialSegments: 6
 };
-let cylinder = this.Cylinder(properties);
+let cylinder = Shapes.Cylinder(properties);
 scene.add(cylinder);
 ```
 <br />
