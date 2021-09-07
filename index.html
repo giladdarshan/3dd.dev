@@ -7,45 +7,55 @@
 		<link rel="stylesheet" href="css/index.css">
 		<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
         <script src="js/jquery-3.6.0.min.js"></script>
+		<script src="js/three.min.js"></script>
+		
 		<script type="module">
-            import * as THREE from '/js/three.module.js';
-			import { OrbitControls } from '/js/OrbitControls.js';
+        	import { OrbitControls } from '/js/OrbitControls.js';
 			import { STLExporter } from '/js/STLExporter.js';
 			import { OBJExporter } from '/js/OBJExporter.js';
 			import { BufferGeometryUtils } from '/js/BufferGeometryUtils.js';
+			import { STLLoader } from '/js/STLLoader.js';
+			import { GUI } from '/js/dat.gui.module.js';
 			import CSG from '/js/THREE-CSGMesh.js';
 			import * as Cookies from '/js/js.cookie.min.js';
 			import { GD3DD } from '/js/3dd.js';
+			import { Shapes } from '/js/3ddShapes.js';
 			import { Utils } from '/js/3ddUtils.js';
-			var gd3dd = new GD3DD(THREE, OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG, Utils);
+			import * as BVH from '/js/three-mesh-bvh.module.js';
+		
+			var gd3dd = new GD3DD(OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG, Shapes, Utils, STLLoader, GUI, BVH);
 			gd3dd.start();
 			$('document').ready(() => {
 				gd3dd.documentReady();
 			});
-			$(window).bind("resize", function(){
+			$(window).bind("resize", () => {
 				gd3dd.windowResizeCallback();
 			});
 		</script>
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script>
+		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script> -->
 		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
+			// window.dataLayer = window.dataLayer || [];
+			// function gtag(){dataLayer.push(arguments);}
+			// gtag('js', new Date());
 
-			gtag('config', 'G-K6MYWMLWH8');
+			// gtag('config', 'G-K6MYWMLWH8');
 		</script>
 	</head>
 	<body>
 		<div id="body">
 			<div id="headerDiv">
 				<div id="titleDiv">
-					3DD.Dev - Under Development
+					3DD.Dev
 				</div>
 				<div id="controlButtons">
 					<button id="exportSTLBinary">Export Binary STL</button>
-					<button id="exportOBJ">Export OBJ</button>
+					<!-- <button id="exportOBJ">Export OBJ</button> -->
 					<button id="exportSTLASCII">Export ASCII STL</button>
+					<button id="startARBtn">Start AR</button>
+					<button id="sculptBtn">Sculpt</button>
+					<button id="shareBtn">Share</button>
+					<div><input type="checkbox" id="lightsCheckbox" name="lightsCheckbox" checked><label for="lightsCheckbox" title="Turn point lights on/off">Lights</label></div>
 				</div>
 				<div id="linksDiv">
 					<a href="https://github.com/giladdarshan/3dd.dev/blob/main/README.md" target="_blank" id="readMeLink">Read Me</a>
@@ -54,9 +64,28 @@
 			<div id="bodyDiv">
 				<div id="leftDiv">
 					<div id="leftDivControls">
-						<input type="checkbox" id="showGridCheckbox" name="showGridCheckbox" checked="checked">
-						<label for="showGridCheckbox">Show Grid</label>
+						<div class="leftDivControlsLayer">
+							<div>
+								<input type="checkbox" id="showGridCheckbox" name="showGridCheckbox" checked="checked">
+								<label for="showGridCheckbox">Show Grid</label>
+							</div>
+							<div>
+								<input type="checkbox" id="continuousModeCheckbox" name="continuousModeCheckbox">
+								<label for="continuousModeCheckbox" title="Do not clear scene between code runs">Continuous Mode</label>
+							</div>
+							<div>
+								<button id="importSTLBtn">Import STL</button>
+								<input type="file" id="loadSTLInput" accept=".stl">
+							</div>
+						</div>
+						<div class="leftDivControlsLayer">
+							<div id="continuousModeOptions">
+								<input type="checkbox" id="clearCodeCheckbox" name="clearCodeCheckbox" checked="checked">
+								<label for="clearCodeCheckbox">Clear Code</label>
+							</div>
+						</div>
 					</div>
+					<textarea id="processedCode" readonly></textarea>
 					<textarea id="code" autocapitalize="none" spellcheck="false"></textarea>
 					<button id="runCodeBtn">Run Code</button>
 				</div>
@@ -73,6 +102,10 @@
 		<div id="readMeLinkPopup">
 			First time visitor?<br />
 			Head over to the Read Me page!
+		</div>
+		<div id="renderingOverlay">
+			<h1><div id="renderingOverlayText">Rendering</div></h1>
+			<div id="overlayLoadingSpinner"></div>
 		</div>
 	</body>
 </html>

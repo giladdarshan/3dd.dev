@@ -1,6 +1,6 @@
-import {
+const {
 	Vector3
-} from '/js/three.module.js';
+} = THREE;
 
 /**
  * Usage:

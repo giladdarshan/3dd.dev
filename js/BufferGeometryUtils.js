@@ -1,4 +1,4 @@
-import {
+const {
 	BufferAttribute,
 	BufferGeometry,
 	Float32BufferAttribute,
@@ -8,7 +8,7 @@ import {
 	TriangleStripDrawMode,
 	TrianglesDrawMode,
 	Vector3
-} from '/js/three.module.js';
+} = THREE;
 
 class BufferGeometryUtils {
 
