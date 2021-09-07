@@ -1,9 +1,9 @@
-import {
+const {
 	Color,
 	Matrix3,
 	Vector2,
 	Vector3
-} from '/js/three.module.js';
+} = THREE;
 
 class OBJExporter {
 
