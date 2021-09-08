@@ -272,16 +272,25 @@ export class Shapes {
             let geometriesArr = [];
             let obj1Geometry = obj1.geometry.clone();
             obj1Geometry.applyMatrix4(obj1.matrix);
-            geometriesArr.push(obj1Geometry);
             obj1.geometry.dispose();
             obj1.material.dispose();
-
+            
             let obj2Geometry = obj2.geometry.clone();
             obj2Geometry.applyMatrix4(obj2.matrix);
-            geometriesArr.push(obj2Geometry);
             obj2.geometry.dispose();
             obj2.material.dispose();
-
+            if (obj1Geometry.index !== null) {
+                if (obj2Geometry.index === null) {
+                    obj2Geometry = this.BufferGeometryUtils.mergeVertices(obj2Geometry);
+                }
+            }
+            else {
+                if (obj2Geometry.index !== null) {
+                    obj1Geometry = this.BufferGeometryUtils.mergeVertices(obj1Geometry);
+                }
+            }
+            geometriesArr.push(obj1Geometry);
+            geometriesArr.push(obj2Geometry);
             let newGeometry = this.BufferGeometryUtils.mergeBufferGeometries(geometriesArr);
             let newObj = new THREE.Mesh(newGeometry, this.getMaterial());
 
