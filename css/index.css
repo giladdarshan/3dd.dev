@@ -107,14 +107,17 @@ button {
 #code {
     /* color: blue; */
     width: inherit;
-    height: 90%;
+    height: 88%;
     resize: none;
     flex-grow: 1;
+    /* background-color: #3d3d3d;
+    color: #d1d1d1; */
 }
 #runCodeBtn {
     width: inherit;
     height: 10%;
     flex-shrink: 0;
+    margin-top: 7px;
 }
 #rightDiv {
     width: 700px;

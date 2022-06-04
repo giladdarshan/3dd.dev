@@ -7,23 +7,47 @@
 		<link rel="stylesheet" href="css/index.css">
 		<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
         <script src="js/jquery-3.6.0.min.js"></script>
-		<script src="js/three.min.js"></script>
-		
+		<!-- <script src="js/three.min.js"></script> -->
+		<script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+		<!-- Import maps polyfill -->
+		<!-- Remove this when import maps will be widely supported -->
+		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./js/threejs/three.module.js",
+					"threeModules/": "./js/threejs/modules/",
+					"OctreeCSG/": "./js/OctreeCSG/",
+					"three-csg": "./js/three-csg/three-csg.js",
+					"three-mesh-bvh": "./js/three-mesh-bvh/three-mesh-bvh.module.js"
+				}
+			}
+		</script>
 		<script type="module">
-        	import { OrbitControls } from '/js/OrbitControls.js';
-			import { STLExporter } from '/js/STLExporter.js';
-			import { OBJExporter } from '/js/OBJExporter.js';
-			import { BufferGeometryUtils } from '/js/BufferGeometryUtils.js';
-			import { STLLoader } from '/js/STLLoader.js';
+        	// import { OrbitControls } from '/js/OrbitControls.js';
+			// import { STLExporter } from '/js/STLExporter.js';
+			// import { OBJExporter } from '/js/OBJExporter.js';
+			// import * as BGU from '/js/BufferGeometryUtils.js';
+			// import { STLLoader } from '/js/STLLoader.js';
 			import { GUI } from '/js/dat.gui.module.js';
-			import CSG from '/js/THREE-CSGMesh.js';
+			// import CSG from '/js/three-csg/three-csg.js';
 			import * as Cookies from '/js/js.cookie.min.js';
 			import { GD3DD } from '/js/3dd.js';
 			import { Shapes } from '/js/3ddShapes.js';
-			import { Utils } from '/js/3ddUtils.js';
-			import * as BVH from '/js/three-mesh-bvh.module.js';
-		
-			var gd3dd = new GD3DD(OrbitControls, STLExporter, OBJExporter, BufferGeometryUtils, CSG, Shapes, Utils, STLLoader, GUI, BVH);
+			import Utils from '/js/3ddUtils.js';
+			// import * as BVH from '/js/three-mesh-bvh.module.js';
+			
+			
+			
+
+
+			// THREE.VertexNormalsHelper = VertexNormalsHelper;
+			// THREE.VertexTangentsHelper = VertexTangentsHelper;
+			// THREE.BufferGeometryUtils = BufferGeometryUtils;
+			var gd3dd = new GD3DD(Shapes, Utils, GUI);
 			gd3dd.start();
 			$('document').ready(() => {
 				gd3dd.documentReady();
@@ -33,13 +57,13 @@
 			});
 		</script>
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script>
+		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script> -->
 		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
+			// window.dataLayer = window.dataLayer || [];
+			// function gtag(){dataLayer.push(arguments);}
+			// gtag('js', new Date());
 
-			gtag('config', 'G-K6MYWMLWH8');
+			// gtag('config', 'G-K6MYWMLWH8');
 		</script>
 	</head>
 	<body>
@@ -86,7 +110,7 @@
 						</div>
 					</div>
 					<textarea id="processedCode" readonly></textarea>
-					<textarea id="code" autocapitalize="none" spellcheck="false"></textarea>
+					<div id="code" autocapitalize="none" spellcheck="false"></div>
 					<button id="runCodeBtn">Run Code</button>
 				</div>
 				<div id="mainDivBorder"> </div>
