@@ -1,23 +1,62 @@
+import * as THREE from 'three';
+import * as BufferGeometryUtils from 'threeModules/utils/BufferGeometryUtils.js';
+import { OrbitControls } from 'threeModules/controls/OrbitControls.js';
+import { STLLoader } from 'threeModules/loaders/STLLoader.js';
+import { STLExporter } from 'threeModules/exporters/STLExporter.js';
+import { OBJExporter } from 'threeModules/exporters/OBJExporter.js';
+import { VertexNormalsHelper } from 'threeModules/helpers/VertexNormalsHelper.js';
+import { VertexTangentsHelper } from 'threeModules/helpers/VertexTangentsHelper.js';
+import { TessellateModifier } from 'threeModules/modifiers/TessellateModifier.js';
+import { SimplifyModifier } from 'threeModules/modifiers/SimplifyModifier.js';
+import { Octree } from 'threeModules/math/Octree.js';
+import { OctreeHelper } from 'threeModules/helpers/OctreeHelper.js';
+
+import CSG from 'three-csg';
+import OctreeCSG from 'OctreeCSG/OctreeCSG.js';
+import * as BVH from 'three-mesh-bvh';
 const REVISION = "0.1.0";
-var OrbitControls = {};
-var BufferGeometryUtils = {};
-var ThreeBSP = {};
-var CSG = {};
+
 var outputTextObj = {};
+var code_editor = {};
+var session_started = false; // Used for the beforeunload function
+
+// Support dynamic imports in sandboxed code:
+// dynamicImport('/js/threejs/modules/helpers/OctreeHelper.js', (module) => {
+//   console.log("module", module.OctreeHelper);
+// });
+
+function dynamicImport(path, cbFunc) {
+  import(path).then(cbFunc);
+}
+
+// THREE.OctreeHelper = OctreeHelper;
 function outputText() {
   for (let i = 0; i < arguments.length; i++) {
+    let currArg = arguments[i];
+    if (typeof currArg == 'object') {
+      try {
+        currArg = JSON.stringify(currArg);
+      }
+      catch (e) {
+        currArg = arguments[i];
+      }
+    }
     if (i == 0) {
-      outputTextObj.value = `${outputTextObj.value}${arguments[i]}`;
+      outputTextObj.value = `${outputTextObj.value}${currArg}`;
     }
     else {
-      outputTextObj.value = `${outputTextObj.value} ${arguments[i]}`;
+      outputTextObj.value = `${outputTextObj.value} ${currArg}`;
     }
   }
   outputTextObj.value = `${outputTextObj.value}\n`;
+  outputTextObj.scrollTop = outputTextObj.scrollHeight;
 }
-
+async function evalSandbox(code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, Utils, GUI, OctreeCSG, BVH, STLExporter, OBJExporter, STLLoader, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) {
+  // eval(code);
+  await eval("(async () => {" + code + "})()");
+}
 export class GD3DD {
-  constructor(OrbitControlsInc, STLExporter, OBJExporter, BufferGeometryUtilsInc, CSGInc, Shapes, Utils, STLLoader, THREEJS_GUI, BVH) {
+  constructor(Shapes, Utils, THREEJS_GUI) {
     this.windowSize = {};
     this.BORDER_SIZE = 4;
     this.mainDiv = document.getElementById("mainDiv");
@@ -26,6 +65,7 @@ export class GD3DD {
     this.mainDivBorder = document.getElementById("mainDivBorder");
     this.headerDiv = document.getElementById("headerDiv");
     this.footerDiv = document.getElementById("footerDiv");
+    this.continuousModeCheckbox = document.getElementById("continuousModeCheckbox");
     this.codeBox = document.getElementById("code");
     this.startARBtn = document.getElementById("startARBtn");
     outputTextObj = document.getElementById("outputText");
@@ -42,15 +82,12 @@ export class GD3DD {
     this.lightsTurnedOn = this.lightsCheckbox.checked;
     this.lightsSet = false;
     this.ARStarted = false;
-    OrbitControls = OrbitControlsInc;
 
-    BufferGeometryUtils = BufferGeometryUtilsInc;
-    this.STLExporter = STLExporter;
-    this.OBJExporter = OBJExporter;
+
+
     this.STLLoader = new STLLoader();
-    CSG = CSGInc;
     this.animationArr = [];
-    this.Shapes = new Shapes(CSG, BufferGeometryUtils);
+    this.Shapes = new Shapes(CSG, BufferGeometryUtils, outputText);
     this.Utils = new Utils(this.Shapes, this.animationArr, this.STLLoader, { on: this.lightsOn.bind(this), off: this.lightsOff.bind(this) });
     this.continuousMode = false;
     this.THREEJS_GUI = THREEJS_GUI;
@@ -58,8 +95,40 @@ export class GD3DD {
     this.gui.hide();
     this.GUIVisible = false;
     this.Sculpting = false;
-    this.BVH = BVH;
+
+
     this.setDivSizes();
+    this.configureAceEditor();
+  }
+  configureAceEditor() {
+    this.code_editor = ace.edit("code");
+    code_editor = this.code_editor;
+    let javascriptMode = ace.require("ace/mode/javascript").Mode;
+    ace.require("ace/ext/language_tools");
+    this.code_editor.session.on('changeMode', (e, session) => {
+      if ("ace/mode/javascript" === session.getMode().$id) {
+        if (!!session.$worker) {
+          session.$worker.send("setOptions", [{
+            esversion: 9
+          }]);
+        }
+      }
+    });
+    this.code_editor.session.setMode(new javascriptMode());
+    // this.code_editor.setTheme("ace/theme/twilight");
+
+    this.code_editor.setOptions({
+      theme: "ace/theme/twilight",
+      showLineNumbers: true,
+      wrap: true,
+      enableBasicAutocompletion: true,
+      enableSnippets: true,
+      enableLiveAutocompletion: false
+    });
+    // this.code_editor.session.setOptions({
+
+    // });
+    // console.log(this.code_editor);
   }
   setDivSizes() {
     this.windowSize.width = window.innerWidth;
@@ -100,8 +169,9 @@ export class GD3DD {
     }
     else {
       this.ARStarted = true;
+      session_started = true;
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } }, audio: false }).then(stream => {
-        this.rawVideoStream = stream; //global reference
+        // this.rawVideoStream = stream; //global reference
         this.videoSettings = stream.getVideoTracks()[0].getSettings();
         this.videoDiv = document.createElement("video");
         Object.assign(this.videoDiv, {
@@ -119,6 +189,8 @@ export class GD3DD {
       }).catch(error => {
         alert('error: ' + error);
         console.error(error);
+        this.ARStarted = false;
+        session_started = false;
       });
 
     }
@@ -127,10 +199,10 @@ export class GD3DD {
     // this.startThreeJS();
     document.getElementById("runCodeBtn").addEventListener("click", this.runCode.bind(this), false);
     document.getElementById("exportSTLBinary").addEventListener("click", this.exportSTL.bind(this, true), false);
-    document.getElementById("exportSTLASCII").addEventListener("click", this.exportSTL.bind(this), false);
+    document.getElementById("exportSTLASCII").addEventListener("click", this.exportSTL.bind(this, false), false);
     // document.getElementById("exportOBJ").addEventListener("click", this.exportOBJ.bind(this), false);
     this.showGridCheckbox.addEventListener("click", this.toggleGridHelperVisibility.bind(this), false);
-    document.getElementById("continuousModeCheckbox").addEventListener("click", this.toggleContinuousMode.bind(this), false);
+    this.continuousModeCheckbox.addEventListener("click", this.toggleContinuousMode.bind(this), false);
     document.getElementById("startARBtn").addEventListener("click", this.toggleAR.bind(this), false);
     document.getElementById("importSTLBtn").addEventListener("click", () => { this.loadSTLInput.click(); }, false);
     document.getElementById("clearCodeCheckbox").addEventListener("click", this.toggleClearCode.bind(this), false);
@@ -138,18 +210,18 @@ export class GD3DD {
     document.getElementById("sculptBtn").addEventListener("click", this.startSculpting.bind(this), false);
     document.getElementById("shareBtn").addEventListener("click", this.shareCode.bind(this), false);
     this.lightsCheckbox.addEventListener("click", this.toggleLights.bind(this), false);
-    var gd3ddCookie = Cookies.get('3dd.dev');
+    // var gd3ddCookie = Cookies.get('3dd.dev');
     var displayPopup = false;
-    var popupText = 'First time visitor?<br />Head over to the Read Me page';
-    if (gd3ddCookie) {
-      if (gd3ddCookie != REVISION) {
-        displayPopup = true;
-        popupText = '3DD.Dev was updated!<br/>Head over to the Read Me page';
-      }
-    }
-    else {
-      displayPopup = true;
-    }
+    // var popupText = 'First time visitor?<br />Head over to the Read Me page';
+    // if (gd3ddCookie) {
+    //   if (gd3ddCookie != REVISION) {
+    //     displayPopup = true;
+    //     popupText = '3DD.Dev was updated!<br/>Head over to the Read Me page';
+    //   }
+    // }
+    // else {
+    //   displayPopup = true;
+    // }
     if (displayPopup) {
       var readMeLinkProps = document.getElementById('readMeLink').getBoundingClientRect();
       this.readMeLinkPopup = document.getElementById('readMeLinkPopup');
@@ -160,19 +232,31 @@ export class GD3DD {
       this.readMeLinkPopup.style.top = `${readMeLinkProps.bottom + 10}px`;
       this.readMeLinkPopup.addEventListener('click', this.hideReadMeLinkPopup.bind(this), false);
       setTimeout(this.hideReadMeLinkPopup.bind(this), 10000);
-      Cookies.set('3dd.dev', REVISION);
+      // Cookies.set('3dd.dev', REVISION);
     }
 
     let urlParams = new URLSearchParams(window.location.search);
     let sharedCode = urlParams.get('code');
     if (sharedCode) {
       try {
-        this.codeBox.value = atob(decodeURIComponent(sharedCode));
+        // this.codeBox.value = atob(decodeURIComponent(sharedCode));
+        this.code_editor.session.setValue(atob(decodeURIComponent(sharedCode)));
       }
       catch (e) {
         outputText("Error loading shared code:", e.toString());
       }
     }
+
+
+    // Prevents accidentally leaving the page while working
+    window.addEventListener('beforeunload', function (e) {
+      if ((code_editor.getValue() != "") || session_started) {
+        // Cancel the event
+        e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+        // Chrome requires returnValue to be set
+        e.returnValue = '';
+      }
+    });
   }
 
   showOverlay(text) {
@@ -184,6 +268,7 @@ export class GD3DD {
   }
   stlFileSelected() {
     try {
+      session_started = true;
       if (this.loadSTLInput.files.length > 0) {
         var file = this.loadSTLInput.files[0];
         var filename = file.name;
@@ -201,7 +286,11 @@ export class GD3DD {
           var mesh = new THREE.Mesh(geometry, material);
           mesh.name = filename;
           this.Shapes.set(filename, mesh);
+          outputText("STL file imported as:", filename);
           this.scene.add(mesh);
+          if (!this.continuousModeCheckbox.checked) {
+            this.continuousModeCheckbox.click();
+          }
           this.renderScene();
           this.hideOverlay();
 
@@ -241,6 +330,7 @@ export class GD3DD {
         return;
       }
       this.setDivSizes();
+      this.code_editor.resize(true);
       // this.camera.position.set(0, 200, 200);
       this.camera.position.set(0, 300, 500);
       this.camera.lookAt(0, 0, 0);
@@ -260,19 +350,21 @@ export class GD3DD {
     }
   }
   async runCode() {
+    session_started = true;
     let renderStartTime = Date.now();
     this.showOverlay("Rendering");
     setTimeout(() => {
       this.runSandbox().then(() => {
         if (this.continuousMode) {
           if (this.processedCodeBox.value == "") {
-            this.processedCodeBox.value = this.codeBox.value;
+            this.processedCodeBox.value = this.code_editor.getValue();
           }
           else {
-            this.processedCodeBox.value = `${this.processedCodeBox.value}\n${this.codeBox.value}`;
+            this.processedCodeBox.value = `${this.processedCodeBox.value}\n${this.code_editor.getValue()}`;
           }
           if (this.clearCodeBox) {
-            this.codeBox.value = "";
+            // this.codeBox.value = "";
+            this.code_editor.setValue("");
           }
           if (!this.processedCodeVisible) {
             this.processedCodeBox.style.display = "inline-block";
@@ -291,20 +383,50 @@ export class GD3DD {
         this.hideOverlay();
       }).catch(e => {
         outputText(`Error while rendering: ${e.toString()}`);
+        // outputText(`Error while rendering:`, e.stack );
+        // outputText(e.stackTrace)
+        console.error(e);
         this.hideOverlay();
       });
     }, 50);
   }
   async runSandbox() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        let code = this.codeBox.value;
+        // let code = this.codeBox.value;
+        let code = this.code_editor.getValue();
+        // console.log(code);
         if (!this.continuousMode) {
           if (this.animationArr.length > 0) {
             this.animationArr.splice(0, this.animationArr.length);
           }
-          this.scene = new THREE.Scene();
-          this.addSceneHelpers(false);
+          // this.scene = new THREE.Scene();
+          // this.addSceneHelpers(false);
+          let children = this.scene.children.slice();
+          children.forEach(obj => {
+            if (obj.isScene) {
+              return;
+            }
+            if (obj === this.scene) {
+              return;
+            }
+            if (obj.isMesh) {
+              let dispose = true;
+              if (obj.hasOwnProperty('name')) {
+                if (this.Shapes.get(obj.name) !== undefined) {
+                  dispose = false;
+                }
+              }
+              if (dispose) {
+                this.Shapes.disposeObject(obj);
+              }
+            }
+            else if (obj.is3DDDefault === undefined) {
+              // obj.removeFromParent();
+              this.Shapes.disposeObject(obj);
+            }
+          });
+          children.length = 0;
           // re-add dat.GUI
           if (this.GUIVisible) {
             this.gui.close();
@@ -313,17 +435,23 @@ export class GD3DD {
             this.gui = new this.THREEJS_GUI();
             this.gui.domElement.parentElement.style.top = `${parseInt(getComputedStyle(this.headerDiv, '').height) + 4}px`;
             this.mainDiv.appendChild(this.gui.domElement.parentElement);
+            this.gui.close();
+            this.gui.hide();
           }
           if (this.Sculpting) {
             document.getElementById("sculptBtn").disabled = false;
             this.Sculpting = false;
           }
         }
+        this.Utils.scene = this.scene;
 
-
-        (function (code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, Shapes, console, CSG, echo, Utils, GUI, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) {
-          eval(code);
-        }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, this.Shapes, { log: console.log, error: console.error }, this.CSG, outputText, this.Utils, this.THREEJS_GUI, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+        // console.log("before");
+        await (async function (code, THREE, OrbitControls, BufferGeometryUtils, scene, camera, renderer, orbitControl, Shapes, console, CSG, echo, Utils, GUI, OctreeCSG, BVH, dynamicImport, STLExporter, OBJExporter, STLLoader, alert, window, document, $, XMLHttpRequest, XMLHttpRequestEventTarget, XMLHttpRequestUpload, Blob, URL, Cookies, CookieStore, CookieStoreManager) {
+          await eval(code);
+          // await eval("(async () => {" + code + "})()");
+        }(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, this.controls, this.Shapes, { log: console.log, error: console.error, warn: console.warn }, CSG, outputText, this.Utils, this.THREEJS_GUI, OctreeCSG, BVH, dynamicImport, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined));
+        // await evalSandbox(code, THREE, OrbitControls, BufferGeometryUtils, this.scene, this.camera, this.renderer, this.Shapes, { log: console.log, error: console.error, warn: console.warn }, CSG, outputText, this.Utils, this.THREEJS_GUI, OctreeCSG, BVH, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+        // console.log("after");
         if (this.animationArr.length > 0) {
           this.animate();
         }
@@ -353,6 +481,10 @@ export class GD3DD {
       this.gridHelper = new THREE.GridHelper(gridHelperSize, gridHelperDivisions, "black", "gray");
       this.axesHelper = new THREE.AxesHelper(0.2);
       this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
+
+      this.gridHelper.is3DDDefault = true;
+      this.axesHelper.is3DDDefault = true;
+      this.hemisphereLight.is3DDDefault = true;
       this.pointLights = [];
       this.addLights();
       if (!this.lightsTurnedOn) {
@@ -378,6 +510,7 @@ export class GD3DD {
       this.pointLights = [];
       for (let i = 0; i < 8; i++) {
         this.pointLights[i] = new THREE.PointLight(0xffffff, 1, 0);
+        this.pointLights[i].is3DDDefault = true;
       }
 
       let lightsDistance = this.cameraFar;
@@ -431,8 +564,8 @@ export class GD3DD {
     this.renderScene();
   }
   startThreeJS() {
-    this.exporterSTL = new this.STLExporter();
-    this.exporterOBJ = new this.OBJExporter();
+    this.exporterSTL = new STLExporter();
+    this.exporterOBJ = new OBJExporter();
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(this.mainDivWidth, this.mainDivHeight);
     // this.renderer.setSize( w, h );
@@ -445,7 +578,21 @@ export class GD3DD {
     this.cameraFOV = 45;
     this.cameraAspect = this.mainDivWidth / this.mainDivHeight;
     this.cameraNear = 0.1;
-    this.cameraFar = 10000;
+    this.cameraFar = 10000; // WORKING!
+    /////////
+    // console.log("this.mainDivWidth", this.mainDivWidth);
+    // console.log("this.mainDivHeight", this.mainDivHeight);
+    // console.log("this.cameraAspect", this.cameraAspect);
+    // this.cameraAspect = this.mainDivWidth / this.mainDivHeight;
+    // this.camera.aspect = this.cameraAspect;
+    // this.cameraFar = 100000;
+    // console.log("this.cameraFar", this.cameraFar);
+
+    /////////
+
+
+
+
     this.camera = new THREE.PerspectiveCamera(this.cameraFOV, this.cameraAspect, this.cameraNear, this.cameraFar);
     this.scene = new THREE.Scene();
     this.sceneBackground = new THREE.Color(0xb0b0b0);
@@ -469,9 +616,9 @@ export class GD3DD {
 
 
 
-    THREE.Mesh.prototype.raycast = this.BVH.acceleratedRaycast;
-    THREE.BufferGeometry.prototype.computeBoundsTree = this.BVH.computeBoundsTree;
-    THREE.BufferGeometry.prototype.disposeBoundsTree = this.BVH.disposeBoundsTree;
+    THREE.Mesh.prototype.raycast = BVH.acceleratedRaycast;
+    THREE.BufferGeometry.prototype.computeBoundsTree = BVH.computeBoundsTree;
+    THREE.BufferGeometry.prototype.disposeBoundsTree = BVH.disposeBoundsTree;
 
     // this.animate();
     //////
@@ -517,6 +664,8 @@ export class GD3DD {
   }
   exportSTL(binary) {
     binary = binary || false;
+    // console.log("binary", binary);
+    // console.log("args", arguments);
     if (this.Utils.separateExport) {
       this.scene.traverse(function (object) {
         if (object.isMesh) {
@@ -584,11 +733,12 @@ export class GD3DD {
   // BVH Sculpting
   startSculpting() {
     document.getElementById("sculptBtn").disabled = true;
+    session_started = true;
     this.showOverlay(`Starting Sculpt Mode`);
     setTimeout(() => {
-      // THREE.Mesh.prototype.raycast = this.BVH.acceleratedRaycast;
-      // THREE.BufferGeometry.prototype.computeBoundsTree = this.BVH.computeBoundsTree;
-      // THREE.BufferGeometry.prototype.disposeBoundsTree = this.BVH.disposeBoundsTree;
+      THREE.Mesh.prototype.raycast = BVH.acceleratedRaycast;
+      THREE.BufferGeometry.prototype.computeBoundsTree = BVH.computeBoundsTree;
+      THREE.BufferGeometry.prototype.disposeBoundsTree = BVH.disposeBoundsTree;
       this.sculptTargetMesh = undefined;
       this.bvhHelper = undefined;
       this.sculptMaterial = undefined;
@@ -614,6 +764,9 @@ export class GD3DD {
         flatShading: false,
         depth: 10,
         displayHelper: false,
+        maxIterations: 6,
+        maxEdgeLength: 3,
+        Wireframe: false
       };
 
       // initialize brush cursor
@@ -653,7 +806,7 @@ export class GD3DD {
       objectFolder.add(this.sculptTargetMesh.rotation, 'x').min(0.0).max(Math.PI * 2).step(0.01);
       objectFolder.add(this.sculptTargetMesh.rotation, 'y').min(0.0).max(Math.PI * 2).step(0.01);
       objectFolder.add(this.sculptTargetMesh.rotation, 'z').min(0.0).max(Math.PI * 2).step(0.01);
-      objectFolder.open();
+      // objectFolder.open();
 
       const sculptFolder = this.gui.addFolder('Sculpting');
       sculptFolder.add(this.sculptParams, 'brush', ['normal', 'clay', 'flatten']);
@@ -682,8 +835,33 @@ export class GD3DD {
           this.scene.remove(this.bvhHelper);
         }
       });
-      helperFolder.open();
+      // helperFolder.open();
       // this.gui.add({ reset: this.resetSculptMesh.bind(this) }, 'reset');
+      
+      const tessellateFolder = this.gui.addFolder('Tessellate Modifier');
+      tessellateFolder.add(this.sculptParams, 'maxEdgeLength').min(0.1).max(15).step(0.1);
+      tessellateFolder.add(this.sculptParams, 'maxIterations').min(1).max(25).step(1);
+      tessellateFolder.add({
+        Tessellate: () => {
+          const tessellateModifier = new TessellateModifier(this.sculptParams.maxEdgeLength, this.sculptParams.maxIterations);
+          let newGeometry = tessellateModifier.modify(this.sculptTargetMesh.geometry);
+          this.sculptTargetMesh.geometry.disposeBoundsTree();
+          this.sculptTargetMesh.geometry.dispose();
+          // this.sculptTargetMesh.geometry = newGeometry;
+          this.sculptTargetMesh.geometry = BufferGeometryUtils.mergeVertices(newGeometry);
+          this.sculptTargetMesh.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);
+          this.sculptTargetMesh.geometry.attributes.normal.setUsage(THREE.DynamicDrawUsage);
+          this.sculptTargetMesh.geometry.computeBoundsTree({ setBoundingBox: false });
+          this.bvhHelper.update();
+          // // mesh2.geometry = tessellateModifier2.modify(mesh2.geometry);
+          // computeBoundsTree
+
+        }
+      }, 'Tessellate');
+
+      this.gui.add(this.sculptParams, 'Wireframe').onChange(display => {
+        this.sculptTargetMesh.material.wireframe = display ? true : false;
+      });
       this.gui.add({
         rebuildBVH: () => {
           // don't create a bounding box because it's used in BVH construction but
@@ -802,6 +980,13 @@ export class GD3DD {
       });
       this.scene.add(this.sculptTargetMesh);
     }
+    else {
+      if (this.sculptTargetMesh.material.type === "MeshNormalMaterial") {
+        this.sculptTargetMesh.material.dispose();
+        this.sculptTargetMesh.material = this.Shapes.MeshPhongMaterial(0x371d04);
+      }
+      this.sculptTargetMesh.raycast = BVH.acceleratedRaycast;
+    }
     // this.sculptTargetMesh.material.color.set(0x2d1070);
     this.sculptTargetMesh.geometry.deleteAttribute('uv');
     this.sculptTargetMesh.geometry = BufferGeometryUtils.mergeVertices(this.sculptTargetMesh.geometry);
@@ -816,7 +1001,7 @@ export class GD3DD {
       this.scene.remove(this.bvhHelper);
     }
     // if (!this.bvhHelper) {
-    this.bvhHelper = new this.BVH.MeshBVHVisualizer(this.sculptTargetMesh, this.sculptParams.depth);
+    this.bvhHelper = new BVH.MeshBVHVisualizer(this.sculptTargetMesh, this.sculptParams.depth);
     if (this.sculptParams.displayHelper) {
       this.scene.add(this.bvhHelper);
     }
@@ -830,7 +1015,7 @@ export class GD3DD {
       accumulatedTriangles = new Set(),
       accumulatedIndices = new Set(),
       accumulatedTraversedNodeIndices = new Set(),
-      accumulatedEndNodeIndices = new Set(),
+      // accumulatedEndNodeIndices = new Set(),
     } = accumulatedFields;
 
     const inverseMatrix = new THREE.Matrix4();
@@ -849,7 +1034,8 @@ export class GD3DD {
     const normalAttr = this.sculptTargetMesh.geometry.attributes.normal;
     const triangles = new Set();
     const bvh = this.sculptTargetMesh.geometry.boundsTree;
-    bvh.shapecast(undefined, {
+    // bvh.shapecast(undefined, {
+    bvh.shapecast({
       intersectsBounds: (box, isLeaf, score, depth, nodeIndex) => {
         accumulatedTraversedNodeIndices.add(nodeIndex);
         const intersects = sphere.intersectsBox(box);
@@ -864,19 +1050,19 @@ export class GD3DD {
                   z === 0 ? min.z : max.z
                 );
                 if (!sphere.containsPoint(tempVec)) {
-                  return this.BVH.INTERSECTED;
+                  return BVH.INTERSECTED;
                 }
               }
             }
           }
-          return this.BVH.CONTAINED;
+          return BVH.CONTAINED;
         }
-        return intersects ? this.BVH.INTERSECTED : this.BVH.NOT_INTERSECTED;
+        return intersects ? BVH.INTERSECTED : BVH.NOT_INTERSECTED;
       },
 
-      intersectsRange: (offset, count, contained, depth, nodeIndex) => {
-        accumulatedEndNodeIndices.add(nodeIndex);
-      },
+      // intersectsRange: (offset, count, contained, depth, nodeIndex) => {
+      //   accumulatedEndNodeIndices.add(nodeIndex);
+      // },
       intersectsTriangle: (tri, index, contained) => {
         const triIndex = index;
         triangles.add(triIndex);
@@ -1108,13 +1294,13 @@ export class GD3DD {
           const changedTriangles = new Set();
           const changedIndices = new Set();
           const traversedNodeIndices = new Set();
-          const endNodeIndices = new Set();
+          // const endNodeIndices = new Set();
           const sets = {
 
             accumulatedTriangles: changedTriangles,
             accumulatedIndices: changedIndices,
             accumulatedTraversedNodeIndices: traversedNodeIndices,
-            accumulatedEndNodeIndices: endNodeIndices,
+            // accumulatedEndNodeIndices: endNodeIndices,
 
           };
           while (castDist > step && mdist > this.sculptParams.size * 200 / hit.distance) {
@@ -1142,7 +1328,7 @@ export class GD3DD {
             // so it's up to date for the next one because both of those are used when updating
             // the model but it's faster to do them here.
             this.sculptUpdateNormals(changedTriangles, changedIndices);
-            this.sculptTargetMesh.geometry.boundsTree.refit(traversedNodeIndices, endNodeIndices);
+            this.sculptTargetMesh.geometry.boundsTree.refit(traversedNodeIndices);
             if (this.bvhHelper.parent !== null) {
               this.bvhHelper.update();
             }
