@@ -57,13 +57,13 @@
 			});
 		</script>
 		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script> -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-K6MYWMLWH8"></script>
 		<script>
-			// window.dataLayer = window.dataLayer || [];
-			// function gtag(){dataLayer.push(arguments);}
-			// gtag('js', new Date());
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
 
-			// gtag('config', 'G-K6MYWMLWH8');
+			gtag('config', 'G-K6MYWMLWH8');
 		</script>
 	</head>
 	<body>
@@ -78,7 +78,7 @@
 					<button id="exportSTLASCII">Export ASCII STL</button>
 					<button id="startARBtn">Start AR</button>
 					<button id="sculptBtn">Sculpt</button>
-					<button id="shareBtn">Share</button>
+					<button id="shareBtn" style="display: none;">Share</button>
 					<div><input type="checkbox" id="lightsCheckbox" name="lightsCheckbox" checked><label for="lightsCheckbox" title="Turn point lights on/off">Lights</label></div>
 				</div>
 				<div id="linksDiv">
