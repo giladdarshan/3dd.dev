@@ -1,7 +1,12 @@
+# Revised Readme coming soon!
+<br/>
+
 # [3DD.Dev](https://3dd.dev) - Under Development
 3D Design Development (CAD) in JavaScript code.\
 3DD.Dev is using the [Three.js](https://threejs.org/) library to create and display the 3D design from the code written in the text box.\
-<img width="350" src="https://github.com/giladdarshan/3dd.dev/blob/main/gh-images/3dd.dev-screenshot.png?raw=true">
+<img width="500" src="https://github.com/giladdarshan/3dd.dev/blob/main/gh-images/3dd.dev-screenshot.png?raw=true">
+<br/>
+<br/>
 
 ### How to use
 1. Go to [https://3DD.Dev](https://3dd.dev)
